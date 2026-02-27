@@ -1,19 +1,21 @@
 import sqlite3
 
 def login(username, password):
-    conn = sqlite3.connect("hospital.db")
-    cursor = conn.cursor()
-    cursor.execute(f"SELECT PasswordHash FROM Staff WHERE UserName = ?", (username,))
-    results = cursor.fetchone()
-    if results == None:
-        print('wrong username or password')
-    else:
+    try:
+        conn = sqlite3.connect("hospital.db")
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT PasswordHash FROM Staff WHERE UserName = ?", (username,))
+        results = cursor.fetchone()
+
         if results[0] == password:
             cursor.execute(f"SELECT Name FROM Staff WHERE UserName = ?", (username,))
             results = cursor.fetchone()
             print('welcome' , results[0])
 
-    return results[0]
+        return results[0]
+    except:
+        print('login error. Wrong username or password')
+        return False
 
 class accounter():
     def __init__(self, accountName):
@@ -36,14 +38,22 @@ class accounter():
         return self._RFIDTagID
 
     def searchPatients(self, patientName):
-        if int(self.returnAS()) < 1:
-            cursor.execute(f"SELECT * FROM Patients WHERE Name = ?", (patientName,))
+        if int(self.returnAS()) > 1:#
+            conn = sqlite3.connect("hospital.db")
+            cursor = conn.cursor()
+        
+            cursor.execute(f"SELECT * FROM Patients WHERE LastName = ?", (patientName,))
             results = cursor.fetchone()
-            print(results)
+            try:
+                print(results[1], results[2], 'has a diagnosis of', results[6], 'at stage', results[7])
+            except:
+                print('patient records cannot be accessed')
+            
 
 username = input('username: ')
 password = input('password: ')
 accountName = login(username, password)
-account = accounter(accountName)
-patientName = input('enter patient name')
-account.searchPatients(patientName)
+if accountName != False:
+    account = accounter(accountName)
+    patientName = input('enter patient last name')
+    account.searchPatients(patientName)
