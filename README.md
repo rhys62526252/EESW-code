@@ -1,4 +1,4 @@
 passwords:
-  ecarter = password
+  ecarter = Password
   jwhite = otherPassword
   sgreen = yetAnotherPassword
