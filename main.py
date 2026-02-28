@@ -55,5 +55,5 @@ password = input('password: ')
 accountName = login(username, password)
 if accountName != False:
     account = accounter(accountName)
-    patientName = input('enter patient last name')
+    patientName = input('enter patient last name: ')
     account.searchPatients(patientName)
