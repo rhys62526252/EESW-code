@@ -115,6 +115,32 @@ class doctor(User):
         conn.close()
         self.log_action(f"Deleted patient record with name: {result[0]} {result[1]}")
         print("Patient deleted successfully.")
+
+
+        def log_treatment():
+            repeat = True
+            while repeat:
+                NHSNumber = input('NHS number ')
+                cursor.execute("""
+                    SELECT FirstName, LastName
+                    FROM Patients
+                    WHERE NHSNumber = ?
+                """, (NHSNumber,))
+                result = cursor.fetchone()
+                if result != None:
+                    print(f"did you mean {result[0]} {result[1]}? ")
+                    if input('Y = yes, N = No') == 'Y':
+                        repeat = False
+
+                
+            cursor.execute("""
+            INSERT INTO Patients (FirstName, LastName, DateOfBirth, NHSNumber, RFIDTagID, Diagnosis, Stage)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (firstName, lastName, DateOfBirth, NHSNumber, RFIDTag, diagnosis, stage))
+
+            
+
+
 class Nurse(User):
     def __init__(self, staffID, username):
         super().__init__(staffID, username)
