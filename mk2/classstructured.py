@@ -97,6 +97,24 @@ class doctor(User):
         conn.close()
         self.log_action(f"added patient record: {firstName} {lastName}")
 
+    def remove_patient(self):
+        conn = sqlite3.connect("hospital.db")
+        cursor = conn.cursor()
+        NHSNumber = input('NHS Number: ')
+        cursor.execute("""
+            SELECT FirstName, LastName
+            FROM Patients
+            WHERE NHSNumber = ?
+        """, (NHSNumber,))
+        result = cursor.fetchone()
+        print(result)
+        cursor.execute("""  
+            DELETE FROM Patients
+            WHERE NHSNumber = ?""", (NHSNumber,))
+        conn.commit()
+        conn.close()
+        self.log_action(f"Deleted patient record with name: {result[0]} {result[1]}")
+        print("Patient deleted successfully.")
 class Nurse(User):
     def __init__(self, staffID, username):
         super().__init__(staffID, username)
@@ -178,4 +196,4 @@ class Admin(User):
         return result
     
 staff = doctor(1, 'ecarter')
-staff.add_patient()
+staff.remove_patient()
