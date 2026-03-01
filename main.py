@@ -79,44 +79,7 @@ class accounter():
 
 
 class doctor():
-    def searchPatients(self, patientName):
-
-        if int(self.returnAS()) >= 2:
-            conn = sqlite3.connect("hospital.db")
-            cursor = conn.cursor()
-
-            cursor.execute("""
-                SELECT FirstName, LastName, Diagnosis, Stage
-                FROM Patients
-                WHERE LastName = ?
-            """, (patientName,))
-            
-            results = cursor.fetchone()
-
-            if results is None:
-                print("Patient not found.")
-                conn.close()
-                return
-
-            first, last, diagnosis, stage = results
-
-            print(first, last, "has a diagnosis of", diagnosis, "at cancer stage", stage)
-
-            action_text = f"Searched patient record: {first} {last}"
-            timestamp = datetime.now().isoformat()
-
-            cursor.execute("""
-                INSERT INTO AccessLogs (StaffID, Action, Timestamp)
-                VALUES (?, ?, ?)
-            """, (self._StaffID, action_text, timestamp))
-
-            conn.commit()
-            conn.close()
- #           except:
-  #              print('patient records cannot be accessed')
-        else: print('Cannot access due to lack of access rights')
-
-
+    
 while True:
     username = input('username: ')
     password = input('password: ')
