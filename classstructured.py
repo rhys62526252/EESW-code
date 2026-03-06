@@ -36,15 +36,15 @@ class User:
     def get_access_level(self):
         return self._accessRights
     
-    def search_patient(self, last_name):
+    def search_patient(self):
         conn = sqlite3.connect("hospital.db")
         cursor = conn.cursor()
-
+        NHSNumber = input('NHS Number: ')
         cursor.execute("""
             SELECT FirstName, LastName, Diagnosis, Stage
             FROM Patients
-            WHERE LastName = ?
-        """, (last_name,))
+            WHERE NHSNumber = ?
+        """, (NHSNumber,))
 
         result = cursor.fetchone()
         conn.close()
@@ -64,43 +64,47 @@ class User:
         conn = sqlite3.connect("hospital.db")
         cursor = conn.cursor()
 
+        NHSNumber = input("Enter NHS number: ")
+
         cursor.execute("""
             SELECT PatientID, FirstName, LastName
             FROM Patients
             WHERE NHSNumber = ?
-        """, (input('enter NHS number: '),))
-        result1 = cursor.fetchone()
-        conn.close()
-        
-        if result1 is None:
+        """, (NHSNumber,))
+
+        patient = cursor.fetchone()
+
+        if patient is None:
             print("Patient not found.")
             conn.close()
-            return None
-        conn = sqlite3.connect("hospital.db")
-        cursor = conn.cursor()
+            return
 
         cursor.execute("""
-            SELECT *
+            SELECT TreatmentType, Date, Notes
             FROM TreatmentLog
             WHERE PatientID = ?
-        """, (result1[0],))
+        """, (patient[0],))
 
-        result = cursor.fetchone()
+        logs = cursor.fetchall()
+
+        if not logs:
+            print("No treatment records found.")
+            conn.close()
+            return
+
+        print(f"\nTreatment records for {patient[1]} {patient[2]}:\n")
+
+        for log in logs:
+            print(f"""
+    Treatment Type: {log[0]}
+    Date: {log[1]}
+    Notes:
+    {log[2]}
+    """)
+
         conn.close()
 
-        if result is None:
-            print("Patient not found.")
-            return None
-        #TreatmentID, PatientID, StaffID, TreatmentID, Date, Notes = result
-
-        self.log_action(f"Searched treatment patient record: {result1[1]} {result1[2]}")
-
-        print(f'''Record Logs for {result1[1]} {result1[2]}: \n
-Treatment Type: {result[3] } \n
-Date: {result[4]} \n
-Notes:
-{result[5]}
-''')
+        self.log_action(f"Searched treatment logs for {patient[1]} {patient[2]}")
 
 
 
@@ -205,35 +209,36 @@ class Nurse(User):
 
 
 def login(username, password):
-
-    conn = sqlite3.connect("hospital.db")
-    cursor = conn.cursor()
-    cursor.execute(f"SELECT PasswordHash FROM Staff WHERE UserName = ?", (username,))
-    results = cursor.fetchone()
-    password = hashlib.sha256(password.encode()).hexdigest()
-    conn.commit()
-    conn.close()
-    if results[0] == password:
+    try:
         conn = sqlite3.connect("hospital.db")
         cursor = conn.cursor()
-        cursor.execute(f"SELECT Name, StaffID, AccessRights FROM Staff WHERE UserName = ?", (username,))
+        cursor.execute(f"SELECT PasswordHash FROM Staff WHERE UserName = ?", (username,))
         results = cursor.fetchone()
+        password = hashlib.sha256(password.encode()).hexdigest()
         conn.commit()
         conn.close()
-        print('welcome' , results[0])
-        return results[2], results[1], results[0]
+        if results[0] == password:
+            conn = sqlite3.connect("hospital.db")
+            cursor = conn.cursor()
+            cursor.execute(f"SELECT Name, StaffID, AccessRights FROM Staff WHERE UserName = ?", (username,))
+            results = cursor.fetchone()
+            conn.commit()
+            conn.close()
+            print('welcome' , results[0])
+            return results[2], results[1], results[0]
 
-        
-    else:
+            
+        else:
+            print('login error. Wrong username or password')
+            return 'Nuhuh', 'Nuhuh', 'Nuhuh'
+    except:
         print('login error. Wrong username or password')
         return 'Nuhuh', 'Nuhuh', 'Nuhuh'
-
 
 while True:
     access, result, username = login(input('Enter username: '), input('Enter password: '))
     time.sleep(2)
-    for x in range(0,100):
-        print()
+    
     
     if access == 'Doctor':
         staff = Doctor(result, username)
@@ -243,6 +248,8 @@ while True:
         staff = 'Nuhuh'
     if staff != 'Nuhuh':
        while True:
+        for x in range(0,100):
+            print()
         if access == 'Nurse':
                 operation = input('enter opperation: \n' \
                     'Search for a patient (S)\n' \
@@ -269,6 +276,8 @@ while True:
                     staff.search_patient()
                 elif operation == 'T':
                     staff.search_log()
+
+        input()
 
                 
                     
