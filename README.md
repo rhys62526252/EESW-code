@@ -1,4 +1,7 @@
 passwords:
-  ecarter = Password
-  jwhite = otherPassword
-  sgreen = yetAnotherPassword
+
+    Dr Sarah Mitchell -> smitchell = Password
+    
+    Dr James Carter -> jcarter = otherPassword
+    
+    Nurse Emily Brown -> ebrown = yetAnotherPassword

@@ -220,8 +220,6 @@ def login(username, password):
     cursor.execute(f"SELECT PasswordHash FROM Staff WHERE UserName = ?", (username,))
     results = cursor.fetchone()
     password = str(hashlib.sha256(password.encode()).hexdigest())
-    print("DB hash:", results[0])
-    print("Input hash:", password)
     conn.commit()
     conn.close()
     if str(results[0].strip()) == str(password.strip()):
