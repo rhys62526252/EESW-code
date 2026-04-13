@@ -159,6 +159,10 @@ class Doctor(User):
             WHERE NHSNumber = ?
         """, (NHSNumber,))
         result = cursor.fetchone()
+        if result is None:
+            print("Patient not found.")
+            conn.close()
+            return
         print(result)
         cursor.execute("""  
             DELETE FROM Patients
@@ -173,7 +177,8 @@ class Doctor(User):
         conn = sqlite3.connect("hospital.db")
         cursor = conn.cursor()
         repeat = True
-        while repeat:
+        NHSNumber = 1
+        while repeat or NHSNumber != 0:
             NHSNumber = input('NHS number ')
             cursor.execute("""
                 SELECT FirstName, LastName, PatientID
@@ -209,33 +214,33 @@ class Nurse(User):
 
 
 def login(username, password):
-    try:
+
+    conn = sqlite3.connect("hospital.db")
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT PasswordHash FROM Staff WHERE UserName = ?", (username,))
+    results = cursor.fetchone()
+    password = str(hashlib.sha256(password.encode()).hexdigest())
+    print("DB hash:", results[0])
+    print("Input hash:", password)
+    conn.commit()
+    conn.close()
+    if str(results[0].strip()) == str(password.strip()):
         conn = sqlite3.connect("hospital.db")
         cursor = conn.cursor()
-        cursor.execute(f"SELECT PasswordHash FROM Staff WHERE UserName = ?", (username,))
+        cursor.execute(f"SELECT Name, StaffID, AccessRights FROM Staff WHERE UserName = ?", (username,))
         results = cursor.fetchone()
-        password = hashlib.sha256(password.encode()).hexdigest()
         conn.commit()
         conn.close()
-        if results[0] == password:
-            conn = sqlite3.connect("hospital.db")
-            cursor = conn.cursor()
-            cursor.execute(f"SELECT Name, StaffID, AccessRights FROM Staff WHERE UserName = ?", (username,))
-            results = cursor.fetchone()
-            conn.commit()
-            conn.close()
-            print('welcome' , results[0])
-            return results[2], results[1], results[0]
+        print('welcome' , results[0])
+        return results[2], results[1], results[0]
 
-            
-        else:
-            print('login error. Wrong username or password')
-            return 'Nuhuh', 'Nuhuh', 'Nuhuh'
-    except:
+        
+    else:
         print('login error. Wrong username or password')
         return 'Nuhuh', 'Nuhuh', 'Nuhuh'
-
-while True:
+    
+attempts = 0
+while attempts < 3:
     access, result, username = login(input('Enter username: '), input('Enter password: '))
     time.sleep(2)
     
@@ -276,8 +281,11 @@ while True:
                     staff.search_patient()
                 elif operation == 'T':
                     staff.search_log()
-
         input()
+    attempts = attempts + 1
+    
+print('login attempts timeout - too many failed attempts')
+        
 
                 
                     
